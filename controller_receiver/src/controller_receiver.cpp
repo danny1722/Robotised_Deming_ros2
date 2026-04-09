@@ -62,6 +62,42 @@ void ControllerReceiver::joy_callback(const sensor_msgs::msg::Joy::SharedPtr msg
         new_msg.buttons[9] = msg->buttons[5]; // Right shoulder
     }
 
+    if (controller_type == ControllerType::XBOX)
+    {
+        // AXES REMAPPING
+        // 0: Right joystick up/down     → axes[4]
+        // 1: Right joystick left/right  → axes[3]
+        // 2: Left joystick up/down      → axes[1]
+        // 3: Left joystick left/right   → axes[0]
+        // 4: Right trigger              → axes[5]
+        // 5: Left trigger               → axes[2]
+
+        new_msg.axes[0] = msg->axes[4];
+        new_msg.axes[1] = msg->axes[3];
+        new_msg.axes[2] = msg->axes[1];
+        new_msg.axes[3] = msg->axes[0];
+        new_msg.axes[4] = msg->axes[5];
+        new_msg.axes[5] = msg->axes[2];
+
+        // BUTTON REMAPPING
+
+        // D-pad (axes → buttons)
+        new_msg.buttons[0] = (msg->axes[7] == 1.0) ? 1 : 0;   // up
+        new_msg.buttons[1] = (msg->axes[7] == -1.0) ? 1 : 0;  // down
+        new_msg.buttons[2] = (msg->axes[6] == 1.0) ? 1 : 0;   // left
+        new_msg.buttons[3] = (msg->axes[6] == -1.0) ? 1 : 0;  // right
+
+        // Face buttons
+        new_msg.buttons[4] = msg->buttons[3]; // Y
+        new_msg.buttons[5] = msg->buttons[0]; // A
+        new_msg.buttons[6] = msg->buttons[2]; // X
+        new_msg.buttons[7] = msg->buttons[1]; // B
+
+        // Shoulder buttons
+        new_msg.buttons[8] = msg->buttons[4]; // Left shoulder
+        new_msg.buttons[9] = msg->buttons[5]; // Right shoulder
+    }
+
     publisher_->publish(new_msg);
 }
 
