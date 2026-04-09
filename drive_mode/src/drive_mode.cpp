@@ -88,7 +88,32 @@ void DriveMode::drive_mode_logic(const sensor_msgs::msg::Joy::SharedPtr msg)
 {
     latest_joy_msg = msg;
     if (current_mode == "drive") {
-        // Implement the logic for controlling the excavator in drive mode based on joystick input
+        // Send drive commands to the rover based on joystick input
+        
+        float left_motor_speed  = msg->axes[1] + msg->axes[0];  // forward + turn
+        float right_motor_speed = msg->axes[1] - msg->axes[0];  // forward - turn
+
+        // Find the maximum magnitude
+        float max_val = std::max(std::abs(left_motor_speed), std::abs(right_motor_speed));
+
+        // Normalize if needed
+        if (max_val > 1.0f) {
+            left_motor_speed  /= max_val;
+            right_motor_speed /= max_val;
+        }
+
+        /*
+        // Create a command string to send to the rover (e.g., "L100 R100" for full speed forward)
+        std::string command = "L" + std::to_string(left_motor_speed) + " R" + std::to_string(right_motor_speed) + "\n";
+
+        // Send the command over serial
+        try {
+            serial_port_rover.Write(command);
+        } catch (const LibSerial::WriteFailed&) {
+            RCLCPP_ERROR(this->get_logger(), "Failed to write to serial port");
+        }
+        */
+        
     }
 }
 
