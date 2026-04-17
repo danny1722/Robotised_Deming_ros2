@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>drive_mode</name>
+  <name>serial_node</name>
   <version>0.0.0</version>
-  <description>Node that controls the rover in drive mode</description>
+  <description>Node that handles the serial communication with the Arduino</description>
   <maintainer email="c.p.monat@student.utwente.nl">ExcavatorPi</maintainer>
   <license>Apache-2.0</license>
 

@@ -2,7 +2,7 @@
 // File description:
 ///////////////////////////////////////////////////////////////////////////////////
 
-#include "mode_selector/mode_selector.hpp"
+#include "mode_selector.hpp"
 
 ModeSelector::ModeSelector() : Node("mode_selector"), current_mode("drive"), switch_confirmation_msg(""), buttons_pressed(false), mode_switched_on_hold(false)
 {

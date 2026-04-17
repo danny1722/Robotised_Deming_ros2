@@ -2,7 +2,7 @@
 // File description:
 ///////////////////////////////////////////////////////////////////////////////////
 
-#include "controller_receiver/controller_receiver.hpp"
+#include "controller_receiver.hpp"
 
 ControllerReceiver::ControllerReceiver() : Node("controller_receiver")
 {
@@ -58,8 +58,8 @@ void ControllerReceiver::joy_callback(const sensor_msgs::msg::Joy::SharedPtr msg
         new_msg.buttons[7] = msg->buttons[1]; // B
 
         // Shoulder buttons
-        new_msg.buttons[8] = msg->buttons[4]; // Left shoulder
-        new_msg.buttons[9] = msg->buttons[5]; // Right shoulder
+        new_msg.buttons[8] = msg->buttons[5]; // Left shoulder
+        new_msg.buttons[9] = msg->buttons[6]; // Right shoulder
     }
 
     if (controller_type == ControllerType::XBOX)

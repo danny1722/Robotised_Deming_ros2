@@ -18,14 +18,38 @@ def generate_launch_description():
             executable="mode_selector",
             name="mode_selector"
         ),
+        # DRIVE SYSTEM
         Node(
-            package="drive_mode",
-            executable="drive_mode",
-            name="drive_mode"
+            package='serial_node',
+            executable='serial_node',
+            namespace='drive',
+            name='serial_node',
+            parameters=[{
+                'port': '/dev/ttyACM0'
+            }]
         ),
+
         Node(
-            package="dig_mode",
-            executable="dig_mode",
-            name="dig_mode"
-        )
+            package='drive_mode',
+            executable='drive_mode',
+            namespace='drive',
+            name='drive_mode'
+        ),
+        # DIG SYSTEM
+        Node(
+            package='serial_node',
+            executable='serial_node',
+            namespace='dig',
+            name='serial_node',
+            parameters=[{
+                'port': '/dev/ttyACM1'
+            }]
+        ),
+
+        Node(
+            package='dig_mode',
+            executable='dig_mode',
+            namespace='dig',
+            name='dig_mode'
+        ),
     ])

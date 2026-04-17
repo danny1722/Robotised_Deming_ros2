@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(drive_mode)
+project(serial_node)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -15,23 +15,29 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+# Use pkg-config for LibSerial
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBSERIAL REQUIRED libserial)
+
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 
-# -------- drive_mode --------
-add_executable(drive_mode src/drive_mode.cpp)
-target_include_directories(drive_mode PUBLIC
+# -------- serial_node --------
+add_executable(serial_node src/serial_node.cpp)
+target_include_directories(serial_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-  
-ament_target_dependencies(drive_mode rclcpp std_msgs sensor_msgs)
 
+ament_target_dependencies(serial_node rclcpp std_msgs sensor_msgs)
+
+target_link_libraries(serial_node
+  ${LIBSERIAL_LIBRARIES})
 
 # -------- install --------
-install(TARGETS drive_mode
+install(TARGETS serial_node
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)

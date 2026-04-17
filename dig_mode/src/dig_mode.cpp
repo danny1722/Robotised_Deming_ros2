@@ -2,7 +2,7 @@
 // File description:
 ///////////////////////////////////////////////////////////////////////////////////
 
-#include "dig_mode/dig_mode.hpp"
+#include "dig_mode.hpp"
 
 DigMode::DigMode() : Node("dig_mode"), latest_joy_msg(nullptr)
 {

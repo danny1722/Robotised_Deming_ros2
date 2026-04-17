@@ -2,7 +2,7 @@
 // File description:
 ///////////////////////////////////////////////////////////////////////////////////
 
-#include "drive_mode/drive_mode.hpp"
+#include "drive_mode.hpp"
 
 DriveMode::DriveMode() : Node("drive_mode"), latest_joy_msg(nullptr)
 {
@@ -18,20 +18,38 @@ DriveMode::DriveMode() : Node("drive_mode"), latest_joy_msg(nullptr)
         std::bind(&DriveMode::switch_mode, this, std::placeholders::_1)
     );
 
-    confirmation_publisher = this->create_publisher<std_msgs::msg::String>("/mode_switch_confirmation", 10);
+    subscription_serial_status = this->create_subscription<std_msgs::msg::Bool>(
+        "/status",
+        10,
+        [this](const std_msgs::msg::Bool::SharedPtr msg) {
+            if (debug_mode) {
+                RCLCPP_INFO(this->get_logger(), "Serial status updated: %s", msg->data ? "Alive" : "Dead");
+            }
+            serial_alive = msg->data;
+        }
+    );
 
-    /*
-    // Initialize the serial communication
-    try {
-		// Change when you're using a different port (type: ls /dev/ttyA* to find the port number)
-		serial_port_rover.Open("/dev/ttyACM1"); 
-		serial_port_rover.SetBaudRate(LibSerial::BaudRate::BAUD_115200);
-    } catch (const LibSerial::OpenFailed&) {
-        RCLCPP_ERROR(this->get_logger(), "Can't open serial port");
-        return;
-    }
-    RCLCPP_INFO(this->get_logger(), "Arduino serial communication initialized.");
-    */
+    subscription_information_data = this->create_subscription<std_msgs::msg::String>(
+        "/info",
+        10,
+        [this](const std_msgs::msg::String::SharedPtr msg) {
+            if (debug_mode) {
+                RCLCPP_INFO(rclcpp::get_logger("DriveMode"), "Information: %s", msg->data.c_str());
+            }
+            information_data = msg->data;
+        }
+    );
+
+     subscription_sensor_data = this->create_subscription<std_msgs::msg::String>(
+        "/sensor",
+        10,
+        [](const std_msgs::msg::String::SharedPtr msg) {
+            RCLCPP_INFO(rclcpp::get_logger("DriveMode"), "Sensor Data: %s", msg->data.c_str());
+        }
+    );
+
+    confirmation_publisher = this->create_publisher<std_msgs::msg::String>("/mode_switch_confirmation", 10);
+    drive_command_publisher = this->create_publisher<std_msgs::msg::String>("/cmd", 10);
 
     RCLCPP_INFO(this->get_logger(), "Drive Mode Node Started");
 }
@@ -102,18 +120,30 @@ void DriveMode::drive_mode_logic(const sensor_msgs::msg::Joy::SharedPtr msg)
             right_motor_speed /= max_val;
         }
 
-        /*
-        // Create a command string to send to the rover (e.g., "L100 R100" for full speed forward)
-        std::string command = "L" + std::to_string(left_motor_speed) + " R" + std::to_string(right_motor_speed) + "\n";
+        // Scale to the motor command range (e.g., -255 to 255)
+        left_motor_speed  = left_motor_speed  * 255.0f;
+        right_motor_speed = right_motor_speed * 255.0f;
+
+        // Create a command string to send to the rover (e.g., "DRIVE,100,100" for full speed forward)
+        std_msgs::msg::String drive_command;
+        drive_command.data = "DRIVE," + std::to_string(left_motor_speed) + "," + std::to_string(right_motor_speed) + "\n";
 
         // Send the command over serial
-        try {
-            serial_port_rover.Write(command);
-        } catch (const LibSerial::WriteFailed&) {
-            RCLCPP_ERROR(this->get_logger(), "Failed to write to serial port");
-        }
-        */
+        drive_command_publisher->publish(drive_command);
         
+        // Create a command whether to raise or lower the stabalizer based on button input (e.g., "STABALIZER,RAISE" or "STABALIZER,LOWER")
+        std_msgs::msg::String stabalizer_command;
+        stabalizer_command.data = "STABALIZER,MAINTAIN\n"; // Default to maintain current stabalizer position
+        
+        if (msg->buttons[0] == 1) {
+            stabalizer_command.data = "STABALIZER,RAISE\n"; 
+        }
+        else if (msg->buttons[1] == 1) {
+            stabalizer_command.data = "STABALIZER,LOWER\n";
+        }
+        
+        // Send the stabalizer command over the drive command publisher
+        drive_command_publisher->publish(stabalizer_command);
     }
 }
 
