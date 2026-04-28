@@ -1,5 +1,24 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // File description:
+// This file implements the ModeSelector ROS2 node, responsible for managing
+// high-level mode switching of the rover based on joystick input.
+//
+// Key responsibilities:
+// - Monitoring joystick button combinations to trigger mode transitions
+// - Handling intermediate transition states (e.g., "drive_to_dig")
+// - Implementing a press-and-hold mechanism for safe mode switching
+// - Requesting and processing switch confirmations from the DriveMode node
+// - Publishing the currently selected mode at a fixed rate
+//
+// Safety features:
+// - Requires a sustained button hold (≥ 2 seconds) to complete a mode switch
+// - Verifies switch confirmation before finalizing transitions
+// - Reverts to the original mode if confirmation fails or is not received
+// - Prevents repeated switching or warning spam during a single button hold
+//
+// Mode flow:
+// - "drive" → "drive_to_dig" → "dig"
+// - "dig"   → "dig_to_drive" → "drive"
 ///////////////////////////////////////////////////////////////////////////////////
 
 #include "mode_selector.hpp"

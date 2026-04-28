@@ -18,22 +18,48 @@ DigMode::DigMode() : Node("dig_mode"), latest_joy_msg(nullptr)
         std::bind(&DigMode::switch_mode, this, std::placeholders::_1)
     );
 
+    subscription_serial_status = this->create_subscription<std_msgs::msg::Bool>(
+        "status",
+        10,
+        [this](const std_msgs::msg::Bool::SharedPtr msg) {
+            if (debug_mode) {
+                RCLCPP_INFO(this->get_logger(), "Serial status updated: %s", msg->data ? "Alive" : "Dead");
+            }
+            serial_alive = msg->data;
+        }
+    );
+
+    subscription_debug_data = this->create_subscription<std_msgs::msg::String>(
+        "debug",
+        10,
+        [this](const std_msgs::msg::String::SharedPtr msg) {
+            if (debug_mode) {
+                RCLCPP_INFO(rclcpp::get_logger("DigMode"), "Debug: %s", msg->data.c_str());
+            }
+            debug_data = msg->data;
+        }
+    );
+
+    subscription_sensor_data = this->create_subscription<std_msgs::msg::String>(
+        "sensor",
+        10,
+        [](const std_msgs::msg::String::SharedPtr msg) {
+            RCLCPP_INFO(rclcpp::get_logger("DigMode"), "Sensor Data: %s", msg->data.c_str());
+        }
+    );
+
+    subscription_error_data = this->create_subscription<std_msgs::msg::String>(
+        "error",
+        10,
+        [](const std_msgs::msg::String::SharedPtr msg) {
+            RCLCPP_ERROR(rclcpp::get_logger("DigMode"), "Error: %s", msg->data.c_str());
+        }
+    );
+
     confirmation_publisher = this->create_publisher<std_msgs::msg::String>("/mode_switch_confirmation", 10);
+    dig_command_publisher = this->create_publisher<std_msgs::msg::String>("cmd", 10);
 
-    /*
-    // Initialize the serial communication
-    try {
-		// Change when you're using a different port (type: ls /dev/ttyA* to find the port number)
-		serial_port_rover.Open("/dev/ttyACM1"); 
-		serial_port_rover.SetBaudRate(LibSerial::BaudRate::BAUD_115200);
-    } catch (const LibSerial::OpenFailed&) {
-        RCLCPP_ERROR(this->get_logger(), "Can't open serial port");
-        return;
-    }
-    RCLCPP_INFO(this->get_logger(), "Arduino serial communication initialized.");
-    */
-
-    RCLCPP_INFO(this->get_logger(), "Drive Mode Node Started");
+    RCLCPP_INFO(this->get_logger(), "Dig Mode Node Started");
 }
 
 void DigMode::switch_mode(const std_msgs::msg::String::SharedPtr msg)

@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// File description:
+// File description: This file implements the DriveMode ROS2 node, responsible for handling rover
+// movement in "drive" mode. It subscribes to joystick input and selected mode
+// topics, processes user commands, and publishes motor and actuator commands
+// to the rover via a serial interface.
 ///////////////////////////////////////////////////////////////////////////////////
 
 #include "drive_mode.hpp"
@@ -19,7 +22,7 @@ DriveMode::DriveMode() : Node("drive_mode"), latest_joy_msg(nullptr)
     );
 
     subscription_serial_status = this->create_subscription<std_msgs::msg::Bool>(
-        "/status",
+        "status",
         10,
         [this](const std_msgs::msg::Bool::SharedPtr msg) {
             if (debug_mode) {
@@ -29,27 +32,35 @@ DriveMode::DriveMode() : Node("drive_mode"), latest_joy_msg(nullptr)
         }
     );
 
-    subscription_information_data = this->create_subscription<std_msgs::msg::String>(
-        "/info",
+    subscription_debug_data = this->create_subscription<std_msgs::msg::String>(
+        "debug",
         10,
         [this](const std_msgs::msg::String::SharedPtr msg) {
             if (debug_mode) {
-                RCLCPP_INFO(rclcpp::get_logger("DriveMode"), "Information: %s", msg->data.c_str());
+                RCLCPP_INFO(rclcpp::get_logger("DriveMode"), "Debug: %s", msg->data.c_str());
             }
-            information_data = msg->data;
+            debug_data = msg->data;
         }
     );
 
-     subscription_sensor_data = this->create_subscription<std_msgs::msg::String>(
-        "/sensor",
+    subscription_sensor_data = this->create_subscription<std_msgs::msg::String>(
+        "sensor",
         10,
         [](const std_msgs::msg::String::SharedPtr msg) {
             RCLCPP_INFO(rclcpp::get_logger("DriveMode"), "Sensor Data: %s", msg->data.c_str());
         }
     );
 
+    subscription_error_data = this->create_subscription<std_msgs::msg::String>(
+        "error",
+        10,
+        [](const std_msgs::msg::String::SharedPtr msg) {
+            RCLCPP_ERROR(rclcpp::get_logger("DriveMode"), "Error: %s", msg->data.c_str());
+        }
+    );
+
     confirmation_publisher = this->create_publisher<std_msgs::msg::String>("/mode_switch_confirmation", 10);
-    drive_command_publisher = this->create_publisher<std_msgs::msg::String>("/cmd", 10);
+    drive_command_publisher = this->create_publisher<std_msgs::msg::String>("cmd", 10);
 
     RCLCPP_INFO(this->get_logger(), "Drive Mode Node Started");
 }

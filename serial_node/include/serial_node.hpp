@@ -30,8 +30,9 @@ private:
     std::chrono::steady_clock::time_point last_response_time;
     
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr status_pub;
-    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr info_pub;
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr debug_pub;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr sensor_pub;
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr error_pub;
 
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr cmd_sub;
 

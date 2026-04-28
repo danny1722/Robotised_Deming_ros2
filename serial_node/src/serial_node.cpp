@@ -1,3 +1,27 @@
+///////////////////////////////////////////////////////////////////////////////////
+// File description:
+// This file implements the SerialNode ROS2 node, responsible for handling
+// bidirectional serial communication between the ROS2 system and an Arduino.
+//
+// Key responsibilities:
+// - Initializing and managing the serial connection to the Arduino
+// - Sending commands from ROS2 topics to the Arduino via serial
+// - Receiving and parsing serial messages from the Arduino
+// - Publishing system status (alive/dead) using a watchdog mechanism
+// - Relaying debug, sensor, and error messages to dedicated ROS2 topics
+// - Periodically sending heartbeat (PING) messages to verify connectivity
+// - Using thread-safe serial writes to prevent data corruption
+//
+// Communication protocol:
+// - Outgoing: "COMMAND,arg1,arg2,...\n"
+// - Incoming: prefixed messages such as:
+//     * "PONG"                → heartbeat response
+//     * "DEBUG,<message>"     → debug information
+//     * "SENSOR,<data>"       → sensor readings
+//     * "ERROR,<message>"     → error reporting
+//
+///////////////////////////////////////////////////////////////////////////////////
+
 #include "serial_node.hpp"
 
 SerialNode::SerialNode() : Node("serial_node")
@@ -20,9 +44,9 @@ SerialNode::SerialNode() : Node("serial_node")
     RCLCPP_INFO(this->get_logger(), "Arduino serial communication initialized.");
 
     status_pub = create_publisher<std_msgs::msg::Bool>("status", 10);
-    info_pub   = create_publisher<std_msgs::msg::String>("info", 10);
-    sensor_pub   = create_publisher<std_msgs::msg::String>("sensor", 10);
-
+    debug_pub = create_publisher<std_msgs::msg::String>("debug", 10);
+    sensor_pub = create_publisher<std_msgs::msg::String>("sensor", 10);
+    error_pub = create_publisher<std_msgs::msg::String>("error", 10);   
     cmd_sub = create_subscription<std_msgs::msg::String>(
         "cmd", 10,
         std::bind(&SerialNode::cmdCallback, this, std::placeholders::_1));
@@ -93,15 +117,33 @@ void SerialNode::readSerial()
             if (type == "PONG") {
                 arduino_alive = true;
             }
-            else if (type == "INFORMATION") {
+            // Message format: "DEBUG,Some debug info here" or "SENSOR,Some sensor data here"
+            // Usefull information for debugguing and monitoring the system
+            else if (type == "DEBUG") {
+                std::string payload;
+                std::getline(ss, payload);
+
                 std_msgs::msg::String msg;
-                msg.data = line;
-                info_pub->publish(msg);
+                msg.data = payload;
+                debug_pub->publish(msg);
             }
+            // Sensor data
             else if (type == "SENSOR") {
+                std::string payload;
+                std::getline(ss, payload);
+
                 std_msgs::msg::String msg;
-                msg.data = line;
+                msg.data = payload;
                 sensor_pub->publish(msg);
+            }
+
+            else if (type == "ERROR") {
+                std::string payload;
+                std::getline(ss, payload);
+
+                std_msgs::msg::String msg;
+                msg.data = payload;
+                error_pub->publish(msg);
             }
 
         } catch (...) {

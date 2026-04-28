@@ -21,7 +21,8 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr subscription_data;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_mode;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_sensor_data;
-    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_information_data;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_debug_data;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr subscription_error_data;
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr subscription_serial_status;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr confirmation_publisher;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr drive_command_publisher;
@@ -31,9 +32,8 @@ private:
     sensor_msgs::msg::Joy::SharedPtr latest_joy_msg;
 
     bool debug_mode = false; // Set to true to enable debug logs
-    bool is_command_received = false; // Flag to track if the command has been acknowledged by the Arduino
-    bool serial_alive = false; // Flag to track if the serial connection is alive
-    std::string information_data = ""; // Variable to store the latest information data received from the Arduino
+    bool serial_alive = false; // Track the status of the serial connection
+    std::string debug_data = ""; // Variable to store the latest debug data received from the Arduino
 };
 
 #endif // DRIVE_MODE_HPP

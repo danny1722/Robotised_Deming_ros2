@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// File description:
+// File description: This file implements the ControllerReceiver ROS2 node, responsible for
+// normalizing and remapping joystick input from different controller types
+// into a unified format for the rest of the system.
 ///////////////////////////////////////////////////////////////////////////////////
 
 #include "controller_receiver.hpp"
