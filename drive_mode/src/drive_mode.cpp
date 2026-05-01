@@ -25,9 +25,9 @@ DriveMode::DriveMode() : Node("drive_mode"), latest_joy_msg(nullptr)
         "status",
         10,
         [this](const std_msgs::msg::Bool::SharedPtr msg) {
-            if (debug_mode) {
-                RCLCPP_INFO(this->get_logger(), "Serial status updated: %s", msg->data ? "Alive" : "Dead");
-            }
+            //if (debug_mode) {
+            //    RCLCPP_INFO(this->get_logger(), "Serial status updated: %s", msg->data ? "Alive" : "Dead");
+            //}
             serial_alive = msg->data;
         }
     );
@@ -170,23 +170,36 @@ void DriveMode::sensor_msg_callback(const std_msgs::msg::String::SharedPtr msg)
     // Split the sensor data string into components ("TYPE,VALUE")
     std::stringstream ss(msg->data);
     std::string type;
-    std::string value;
-    std::getline(ss, type, ',');
-    std::getline(ss, value, ',');
+
+    std::getline(ss, type, ',');  // ONLY parse type here
 
     if (type == "MOTOR_SPEED") {
-        // Update current motor speeds for use in mode switching logic
-        // Expected format: "MOTOR_SPEED,left_speed,right_speed"
-        std::stringstream speed_ss(value);
         std::string left_speed_str, right_speed_str;
-        std::getline(speed_ss, left_speed_str, ',');
-        std::getline(speed_ss, right_speed_str, ',');
 
-        current_left_motor_speed = std::stoi(left_speed_str);
-        current_right_motor_speed = std::stoi(right_speed_str);
+        std::getline(ss, left_speed_str, ',');
+        std::getline(ss, right_speed_str, ',');
+
+        if (!left_speed_str.empty()) {
+            try {
+                current_left_motor_speed = std::stoi(left_speed_str);
+            } catch (const std::exception &e) {
+                RCLCPP_WARN(this->get_logger(), "Invalid left speed: '%s'", left_speed_str.c_str());
+            }
+        }
+
+        if (!right_speed_str.empty()) {
+            try {
+                current_right_motor_speed = std::stoi(right_speed_str);
+            } catch (const std::exception &e) {
+                RCLCPP_WARN(this->get_logger(), "Invalid right speed: '%s'", right_speed_str.c_str());
+            }
+        }
 
         if (debug_mode) {
-            RCLCPP_INFO(this->get_logger(), "Current Motor Speeds - Left: %d, Right: %d", current_left_motor_speed, current_right_motor_speed);
+            RCLCPP_INFO(this->get_logger(),
+                "Current Motor Speeds - Left: %d, Right: %d",
+                current_left_motor_speed,
+                current_right_motor_speed);
         }
     }
 }
