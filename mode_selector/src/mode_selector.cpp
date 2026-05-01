@@ -110,6 +110,12 @@ void ModeSelector::select_mode(const sensor_msgs::msg::Joy::SharedPtr msg)
     } 
     else {
         buttons_pressed = false;
+        if (current_mode == "drive_to_dig") {
+            current_mode = "drive"; // Revert to original mode if buttons released before confirmation
+        } 
+        else if (current_mode == "dig_to_drive") {
+            current_mode = "dig"; // Revert to original mode if buttons released before confirmation
+        }
     }
 }
 
