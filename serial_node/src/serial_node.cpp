@@ -93,10 +93,6 @@ void SerialNode::checkConnection()
     std_msgs::msg::Bool msg;
     msg.data = alive;
     status_pub->publish(msg);
-
-    if (!alive) {
-        writeSerial(serial_port, serial_mutex, "DRIVE,0,0\n");
-    }
 }
 
 void SerialNode::readSerial()

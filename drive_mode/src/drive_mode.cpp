@@ -46,9 +46,7 @@ DriveMode::DriveMode() : Node("drive_mode"), latest_joy_msg(nullptr)
     subscription_sensor_data = this->create_subscription<std_msgs::msg::String>(
         "sensor",
         10,
-        [](const std_msgs::msg::String::SharedPtr msg) {
-            RCLCPP_INFO(rclcpp::get_logger("DriveMode"), "Sensor Data: %s", msg->data.c_str());
-        }
+        std::bind(&DriveMode::sensor_msg_callback, this, std::placeholders::_1)
     );
 
     subscription_error_data = this->create_subscription<std_msgs::msg::String>(
@@ -105,6 +103,13 @@ std::string DriveMode::is_ready_to_switch()
         return "Rover inputs is not zero";
     }
 
+    if (current_left_motor_speed != 0 || current_right_motor_speed != 0) {
+        if (debug_mode) {
+            RCLCPP_WARN(this->get_logger(), "Rover is still moving, cannot switch modes");
+        }
+        return "Rover is still moving";
+    }
+
     // Add additional conditions here:
     // - Check arm position is safe
     // - Check sensors are ready
@@ -155,6 +160,34 @@ void DriveMode::drive_mode_logic(const sensor_msgs::msg::Joy::SharedPtr msg)
         
         // Send the stabalizer command over the drive command publisher
         drive_command_publisher->publish(stabalizer_command);
+    }
+}
+
+void DriveMode::sensor_msg_callback(const std_msgs::msg::String::SharedPtr msg)
+{
+    // Process incoming sensor data if needed
+    
+    // Split the sensor data string into components ("TYPE,VALUE")
+    std::stringstream ss(msg->data);
+    std::string type;
+    std::string value;
+    std::getline(ss, type, ',');
+    std::getline(ss, value, ',');
+
+    if (type == "MOTOR_SPEED") {
+        // Update current motor speeds for use in mode switching logic
+        // Expected format: "MOTOR_SPEED,left_speed,right_speed"
+        std::stringstream speed_ss(value);
+        std::string left_speed_str, right_speed_str;
+        std::getline(speed_ss, left_speed_str, ',');
+        std::getline(speed_ss, right_speed_str, ',');
+
+        current_left_motor_speed = std::stoi(left_speed_str);
+        current_right_motor_speed = std::stoi(right_speed_str);
+
+        if (debug_mode) {
+            RCLCPP_INFO(this->get_logger(), "Current Motor Speeds - Left: %d, Right: %d", current_left_motor_speed, current_right_motor_speed);
+        }
     }
 }
 

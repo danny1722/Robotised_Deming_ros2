@@ -16,6 +16,7 @@ public:
 private:
     void switch_mode(const std_msgs::msg::String::SharedPtr msg);
     void drive_mode_logic(const sensor_msgs::msg::Joy::SharedPtr msg);
+    void sensor_msg_callback(const std_msgs::msg::String::SharedPtr msg);
     std::string is_ready_to_switch();
 
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr subscription_data;
@@ -31,9 +32,12 @@ private:
     std::string current_mode;
     sensor_msgs::msg::Joy::SharedPtr latest_joy_msg;
 
-    bool debug_mode = false; // Set to true to enable debug logs
+    bool debug_mode = true; // Set to true to enable debug logs
     bool serial_alive = false; // Track the status of the serial connection
     std::string debug_data = ""; // Variable to store the latest debug data received from the Arduino
+
+    int current_left_motor_speed = 0;
+    int current_right_motor_speed = 0;
 };
 
 #endif // DRIVE_MODE_HPP
