@@ -42,7 +42,7 @@ source /opt/ros/humble/setup.bash
 ```
 
 # Setup
-The raspberry pi is configured with ubuntu server and a static ip ```192.169.10.2``` to connect your laptop to the raspberry pi connect a ethernet cable to the raspbeery pi and set your ip address to ```192.169.10.1``` with subnet mask of ```255.255.255.0``` 
+The raspberry pi is configured with ubuntu server and a static ip ```192.168.10.2``` to connect your laptop to the raspberry pi connect a ethernet cable to the raspbeery pi and set your ip address to ```192.168.10.1``` with subnet mask of ```255.255.255.0``` 
 
 Now ssh can be used to connect to the raspberry pi.
 In ubuntu this can be done with the following command:
@@ -84,7 +84,7 @@ It may be neccesary to reboot the raspberry pi after applying these changes usin
 
 Note: the raspberry pi is located in a metal electronics box so wifi may not work when the electronics box is closed
 
-# Setup vs code over ssh
+## Setup vs code over ssh
 To connect visual studio code to the raspberry pi first install the ssh extension in vs code 
 
 Then open vs code and press ```CTRL + SHIFT + P``` then enter ```Remote-SSH: Connect to Host...```  
@@ -100,13 +100,32 @@ Enter password of the raspberry pi
 
 Follow this tutorial for more detail: https://code.visualstudio.com/docs/remote/ssh
 
+## Setup Arduino connection
+The port number of the arduino depends on which usb port the arduino is connected to, to find the port number use the following command:
+```
+ls /dev/ttyA*
+```
+As ouput you should see something like:
+```
+/dev/ttyACM0
+```
+This can be set inside:
+```
+/Robotised_Demining_ros2/rover_launch/launch/pi.launch.py
+```
+
 # Usage
 ## Launch all the ros2 nodes
 usefull for testing
 ```ros2 launch rover_launch total.launch.py```
 
 ## Launch pi nodes
-```ros2 launch rover_launch pi.launch.py```
+```
+cd ~/ros2_ws
+colcon build --base-paths src/Robotised_Demining_ros2
+source install/setup.bash
+ros2 launch rover_launch pi.launch.py
+```
 
 ## Launch pc nodes
 ```ros2 launch rover_launch pc.launch.py```
